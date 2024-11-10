@@ -68,3 +68,34 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+sequenceDiagram
+participant User
+participant UI as Frontend UI
+participant BC as Bridge Contract
+participant SO as Supra Oracle
+participant LZ as LayerZero
+participant DC as Destination Chain
+
+    User->>UI: Initiates Transfer
+    UI->>SO: Request Price Proof
+    SO-->>UI: Return Price Proof
+
+    UI->>BC: Send Bridge Transaction
+    activate BC
+    BC->>SO: Verify Price Proof
+    SO-->>BC: Return Verified Price
+
+    BC->>BC: Validate Transaction
+    BC->>LZ: Send Cross-Chain Message
+    deactivate BC
+
+    LZ->>DC: Deliver Message
+    activate DC
+    DC->>DC: Process Message
+    DC->>DC: Mint/Release Tokens
+    deactivate DC
+
+    DC-->>UI: Update Transaction Status
+    UI-->>User: Show Completion
+# supra-bridge
