@@ -1,74 +1,105 @@
 import React, { useState, useEffect } from "react";
-import { Card, Typography, CircularProgress } from "@mui/material";
 import { ethers } from "ethers";
+import {
+  Card,
+  CardContent,
+  Typography,
+  CircularProgress,
+  Alert,
+  AlertTitle,
+  Box,
+} from "@mui/material";
 import SupraPullService from "../services/supraPullService";
-import PriceConsumerABI from "../contracts/abis/PriceConsumer.json";
+
+// ABI for price consumer contract
+const PRICE_CONSUMER_ABI = [
+  "function getPriceDataWithRound(bytes calldata _bytesProof, uint256 pair) external returns (uint256 price, uint256 timestamp, uint256 round)",
+];
 
 const PriceFeed = ({ provider, pairIndex, priceConsumerAddress }) => {
   const [price, setPrice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const supraPullService = new SupraPullService();
+  const [lastUpdate, setLastUpdate] = useState(null);
 
-  const fetchAndVerifyPrice = async () => {
+  const fetchPrice = async () => {
     try {
-      // Fetch proof from Supra
-      const proof = await supraPullService.fetchPriceProofV2([pairIndex]);
+      const supraPullService = new SupraPullService();
+      const signer = provider.getSigner();
 
       // Get contract instance
       const priceConsumer = new ethers.Contract(
         priceConsumerAddress,
-        PriceConsumerABI,
-        provider.getSigner()
+        PRICE_CONSUMER_ABI,
+        signer
       );
 
-      // Get price data with verification
+      // Get price proof from Supra
+      const proof = await supraPullService.fetchPriceProofV2([pairIndex]);
+
+      // Get verified price data from contract
       const [priceData, timestamp, round] =
         await priceConsumer.getPriceDataWithRound(proof, pairIndex);
 
-      // Convert price to number considering decimals
-      const priceValue = ethers.utils.formatUnits(priceData, 8); // Assuming 8 decimals
+      // Convert price to human readable format (8 decimals)
+      const priceValue = ethers.utils.formatUnits(priceData, 8);
       setPrice(priceValue);
-      setLoading(false);
-    } catch (err) {
-      console.error("Error fetching price:", err);
+      setLastUpdate(new Date(timestamp.toNumber() * 1000));
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching price:", error);
       setError("Failed to fetch verified price");
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
     if (provider && priceConsumerAddress) {
-      fetchAndVerifyPrice();
-      const interval = setInterval(fetchAndVerifyPrice, 30000); // Update every 30 seconds
+      fetchPrice();
+      // Update price every 30 seconds
+      const interval = setInterval(fetchPrice, 30000);
       return () => clearInterval(interval);
     }
-  }, [provider, priceConsumerAddress, pairIndex]);
+  }, [provider, priceConsumerAddress]);
 
   if (loading) {
     return (
-      <Card sx={{ p: 2, display: "flex", justifyContent: "center" }}>
-        <CircularProgress size={24} />
+      <Card>
+        <CardContent>
+          <Box display="flex" justifyContent="center" alignItems="center">
+            <CircularProgress size={24} />
+            <Typography sx={{ ml: 2 }}>Loading price feed...</Typography>
+          </Box>
+        </CardContent>
       </Card>
     );
   }
 
   if (error) {
     return (
-      <Card sx={{ p: 2, bgcolor: "#ffebee" }}>
-        <Typography color="error">{error}</Typography>
-      </Card>
+      <Alert severity="error">
+        <AlertTitle>Error</AlertTitle>
+        {error}
+      </Alert>
     );
   }
 
   return (
-    <Card sx={{ p: 2 }}>
-      <Typography variant="subtitle1" gutterBottom>
-        Verified Price Feed
-      </Typography>
-      <Typography variant="h4">
-        ${price ? parseFloat(price).toFixed(2) : "N/A"}
-      </Typography>
+    <Card>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Verified Price Feed
+        </Typography>
+        <Typography variant="h4" color="primary">
+          ${Number(price).toFixed(2)}
+        </Typography>
+        {lastUpdate && (
+          <Typography variant="caption" color="textSecondary">
+            Last updated: {lastUpdate.toLocaleTimeString()}
+          </Typography>
+        )}
+      </CardContent>
     </Card>
   );
 };

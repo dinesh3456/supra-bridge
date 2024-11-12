@@ -355,6 +355,50 @@
       "artifacts": [
         "Context"
       ]
+    },
+    "D:\\partnr\\supra-bridge\\src\\contracts\\Supra.sol": {
+      "lastModificationDate": 1731285878180,
+      "contentHash": "36ccc7698bc24ba360741b5b903f1cc6",
+      "sourceName": "src/contracts/Supra.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          },
+          "metadata": {
+            "useLiteralContent": true
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.19"
+      ],
+      "artifacts": [
+        "ISupraOraclePull",
+        "Supra"
+      ]
     }
   }
 }
