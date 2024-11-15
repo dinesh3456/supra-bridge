@@ -41,11 +41,9 @@ async function main() {
     await priceConsumer.deployed();
     console.log("PriceConsumer deployed to:", priceConsumer.address);
 
-    // Wait for a few blocks
     console.log("Waiting for confirmations...");
     await priceConsumer.deployTransaction.wait(5);
 
-    // Deploy Bridge Contract
     console.log("\nDeploying Bridge Contract...");
     const Bridge = await ethers.getContractFactory("BridgeContract");
     const bridge = await Bridge.deploy(
@@ -55,11 +53,9 @@ async function main() {
     await bridge.deployed();
     console.log("Bridge Contract deployed to:", bridge.address);
 
-    // Wait for a few blocks
     console.log("Waiting for confirmations...");
     await bridge.deployTransaction.wait(5);
 
-    // Verify contracts
     if (process.env.ETHERSCAN_API_KEY || process.env.POLYGONSCAN_API_KEY) {
       console.log("\nVerifying contracts...");
 
@@ -84,7 +80,6 @@ async function main() {
       }
     }
 
-    // Print deployment summary
     console.log("\nDeployment Summary:");
     console.log("Network:", network);
     console.log("PriceConsumer:", priceConsumer.address);
@@ -106,7 +101,6 @@ async function main() {
   }
 }
 
-// Execute deployment
 main()
   .then(() => process.exit(0))
   .catch((error) => {
